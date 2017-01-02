@@ -1,0 +1,17 @@
+# deployed using Ansible: This configuration works for the master!
+
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+log-bin=mysql-bin
+server-id=1
+innodb_flush_log_at_trx_commit=1
+sync_binlog=1
+binlog_format = mixed
+symbolic-links=0
+
+
+[mysqld_safe]
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid
+
