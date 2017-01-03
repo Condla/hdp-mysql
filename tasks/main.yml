@@ -11,13 +11,13 @@
   template: src=templates/mysql-community.repo.j2 dest=/etc/yum.repos.d/mysql-community.repo
 
 - name: install mysql server
-  yum: name=mysql-server
+  yum: name=mysql-server disable_gpg_check=yes
 
 - name: start mysql server
   service: name=mysqld state=started enabled=yes
 
 - name: secure server
-  shell: printf '\n{{ username }}\n{{ password }}\n ' | timeout 2 /usr/bin/mysql_secure_installation
+  shell: printf '\n\n{{ mysql_admin_password }}\n{{ mysql_admin_password }}\n\n\n\n\n ' | timeout 2 /usr/bin/mysql_secure_installation
   register: result
   changed_when: result.rc == 0
   failed_when: result.rc != 0 and result.rc != 124
@@ -25,3 +25,45 @@
 #- name: perform secure installation
 #   command:  mysql_secure_installation  # one enter, 5 times Y  (or configure
 #   directly)
+
+- name: install mysql devel module
+  yum: name=mysql-devel disable_gpg_check=yes
+
+- name: install python mysqldb dependency
+  pip: name=MySQL-python
+  
+- name: create databases
+  mysql_db:
+    name: "{{ item.name }}"
+    state: present
+    login_user: root
+    login_password: "{{ mysql_admin_password }}"
+  with_items: "{{ databases }}"
+
+  #- debug: msg="{{ hostvars[item].ansible_fqdn}}"
+- debug: msg="{{ item }}"
+  with_items: "{{ groups.hdp }}"
+
+
+- name: create hdp database admin users
+  mysql_user:
+    name: "{{ item[0].user }}"
+    password: "{{ item[0].password }}"
+    priv: "{{ item[0].priv }}"
+    host: "{{ hostvars[item[1]].ansible_fqdn }}"
+    login_user: root
+    login_password: "{{ mysql_admin_password }}"
+  with_nested: 
+    - "{{ databases }}"
+    - "{{ groups.hdp }}"
+  
+
+- name: setting the host_all option for all users
+  mysql_user:
+    name: "{{ item.user }}"
+    password: "{{ item.password }}"
+    priv: "{{ item.priv }}"
+    host_all: "{{ item.host_all }}"
+    login_user: root
+    login_password: "{{ mysql_admin_password }}"
+  with_items: "{{ databases }}"
