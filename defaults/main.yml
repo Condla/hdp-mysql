@@ -28,5 +28,10 @@ databases:
     host_all: yes
     password: ranger
     priv: ranger.*:ALL
+  - name: metronrest
+    user: metronrest
+    host_all: yes
+    password: metronrest
+    priv: metronrest.*:ALL
 
       
