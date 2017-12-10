@@ -1,31 +1,22 @@
 ---
 # tasks file for mysql
 
-#- name: deploy rpm
-#  copy: src=files/mysql57-community-release-el7-9.noarch.rpm dest=/tmp/
-#  
-#- name: install mysql rpm
-#  yum: name=/tmp/mysql57-community-release-el7-9.noarch.rpm state=present
+- block:
+  - name: deploy repo config
+    template: src=templates/mysql-community.repo.j2 dest=/etc/yum.repos.d/mysql-community.repo
+  - name: install mysql server
+    yum: name=mysql-server disable_gpg_check=yes
+  
+  - name: start mysql server
+    service: name=mysqld state=started enabled=yes
 
-- name: deploy repo config
-  template: src=templates/mysql-community.repo.j2 dest=/etc/yum.repos.d/mysql-community.repo
-
-- name: install mysql server
-  yum: name=mysql-server disable_gpg_check=yes
-
-- name: start mysql server
-  service: name=mysqld state=started enabled=yes
-
-- name: secure server
-  shell: printf '\n\n{{ mysql_admin_password }}\n{{ mysql_admin_password }}\n\n\n\n\n ' | timeout 2 /usr/bin/mysql_secure_installation
-  register: result
-  changed_when: result.rc == 0
-  failed_when: result.rc != 0 and result.rc != 124
-
-#- name: perform secure installation
-#   command:  mysql_secure_installation  # one enter, 5 times Y  (or configure
-#   directly)
-
+  - name: secure server
+    shell: printf '\n\n{{ mysql_admin_password }}\n{{ mysql_admin_password }}\n\n\n\n\n ' | timeout 2 /usr/bin/mysql_secure_installation
+    register: result
+    changed_when: result.rc == 0
+    failed_when: result.rc != 0 and result.rc != 124
+  when: ansible_distribution == "CentOS"
+  
 - name: install mysql devel module
   yum: name=mysql-devel disable_gpg_check=yes
 
