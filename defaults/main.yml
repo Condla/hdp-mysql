@@ -1,11 +1,14 @@
 ---
 # defaults file for mysql
-mysql_admin_user: hdp
+mysql_admin_user: root
 mysql_admin_password: hdp_admin
 mysql_55_repo_enabled: 0
 mysql_56_repo_enabled: 1
 mysql_57_repo_enabled: 0
 mysql_80_repo_enabled: 0
+
+database_access_hosts:
+  - localhost
 
 databases:
   - name: ambari
