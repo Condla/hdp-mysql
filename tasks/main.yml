@@ -4,6 +4,7 @@
 - block:
   - name: deploy repo config
     template: src=templates/mysql-community.repo.j2 dest=/etc/yum.repos.d/mysql-community.repo
+
   - name: install mysql server
     yum: name=mysql-server disable_gpg_check=yes
   
@@ -27,14 +28,14 @@
   mysql_db:
     name: "{{ item.name }}"
     state: present
-    login_user: root
+    login_user: "{{ mysql_admin_user }}"
     login_password: "{{ mysql_admin_password }}"
   with_items: "{{ databases }}"
 
   #- debug: msg="{{ hostvars[item].ansible_fqdn}}"
-- debug: msg="{{ item }}"
-  with_items: "{{ groups.hdp }}"
-
+- name: check groups  
+  debug: msg="{{ item }}"
+  with_items: "{{ groups.mysql_access }}"
 
 - name: create hdp database admin users
   mysql_user:
@@ -42,19 +43,18 @@
     password: "{{ item[0].password }}"
     priv: "{{ item[0].priv }}"
     host: "{{ hostvars[item[1]].ansible_fqdn }}"
-    login_user: root
+    login_user: "{{ mysql_admin_user }}"
     login_password: "{{ mysql_admin_password }}"
   with_nested: 
     - "{{ databases }}"
-    - "{{ groups.hdp }}"
+    - "{{ groups.mysql_access }}"
   
-
 - name: setting the host_all option for all users
   mysql_user:
     name: "{{ item.user }}"
     password: "{{ item.password }}"
     priv: "{{ item.priv }}"
     host_all: "{{ item.host_all }}"
-    login_user: root
+    login_user: "{{ mysql_admin_user }}" 
     login_password: "{{ mysql_admin_password }}"
   with_items: "{{ databases }}"
